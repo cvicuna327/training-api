@@ -1,0 +1,56 @@
+service: serverless-api-testing
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  versionFunctions: false
+  region: ${opt:region, 'us-west-1'}
+  stage: ${opt:stage, 'dev'}
+  timeout: 30
+
+  apiGateway:
+    binaryMediaTypes:
+      - "*/*"
+    resourcePolicy: ${self:custom.resourcePolicies.${self:provider.stage}}
+
+custom:
+  resourcePolicies:
+    dev:
+      - Effect: Allow
+        Principal: "*"
+        Action: execute-api:Invoke
+        Resource:
+          - execute-api:/*/POST/*
+          - execute-api:/*/GET/*
+          - execute-api:/*/PUT/*
+          - execute-api:/*/OPTIONS/*
+  cors:
+    origin: "*"
+    headers:
+      - Content-Type
+      - X-Amz-Date
+      - Authorization
+      - X-Api-Key
+      - X-Amz-Security-Token
+      - X-Amz-User-Agent
+      - X-Forwarded-For
+  TS_PATTERNS:
+    - "!*.py"
+    - "!*requirements.txt"
+    - "!*.*ignore"
+    - "!*DockerFile"
+    - "!venv/**"
+    - "!app/**"
+    - "src/**"
+    - "!.idea"
+    - "!*.sh"
+
+functions:
+  getTesting:
+    handler: index.handler
+    events:
+      - http:
+          path: /training/test
+          method: get
+          cors: ${self:custom.cors}
